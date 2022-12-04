@@ -7,47 +7,58 @@ import (
 	"os"
 )
 
+// Represents an elf rucksack
 type Rucksack string
-type Compartment string
 
-func (rucksack Rucksack) GetFirstCompartment() Compartment {
+// Gets the contents of the first compartment of this rucksack
+func (rucksack Rucksack) GetFirstCompartment() Rucksack {
 	l := len(rucksack)
-	return Compartment(rucksack[0 : l/2])
+	return Rucksack(rucksack[0 : l/2])
 }
 
-func (rucksack Rucksack) GetSecondCompartment() Compartment {
+// Gets the contents of the second compartment of this rucksack
+func (rucksack Rucksack) GetSecondCompartment() Rucksack {
 	l := len(rucksack)
-	return Compartment(rucksack[l/2 : l])
+	return Rucksack(rucksack[l/2 : l])
 }
 
-func (comp Compartment) GetDuplicateItem(otherComp Compartment) byte {
-	l := len(comp)
-	if len(otherComp) != l {
-		log.Printf("Comp1: %s\n", comp)
-		log.Printf("Comp2: %s\n", otherComp)
-		log.Panicln("The two compartments aren't of equal length!")
-		return 0
-	}
-
-	for i := 0; i < l; i++ {
-		for j := 0; j < l; j++ {
-			if comp[i] == otherComp[j] {
-				return comp[i]
+// Finds the common item among a list of rucksacks.
+// Returns an error if no common item was found.
+// If multiple common items exist, any one of them will be returned.
+func FindCommonItem(rucksacks []Rucksack) (byte, error) {
+	// Find the common item from a variable number of arrays using the hash-map method
+	// Increment the item's value in the "m" map every time it's found in an rucksack
+	m := make(map[byte]int)
+	for _, rucksack := range rucksacks {
+		// Since the rucksacks can contain duplicates, we use a Set-ish map to identify if
+		// we've already found this item in this rucksack so we don't count it twice.
+		s := make(map[byte]bool, len(rucksack))
+		for i := 0; i < len(rucksack); i++ {
+			item := rucksack[i]
+			if !s[item] {
+				m[item]++
+				s[item] = true
 			}
 		}
 	}
-	log.Panicln("Couldn't find any duplicate items between the two compartments")
-	return 0
+	for item, count := range m {
+		if count == len(rucksacks) {
+			return item, nil
+		}
+	}
+	return 0, fmt.Errorf("No common item found.")
 }
 
+// Calculates the item priority from its byte value
 func getItemPriority(item byte) int {
-	if item >= 97 {
-		return int(item) - 96
+	if item >= 'a' {
+		return int(item) - ('a' - 1)
 	} else {
-		return int(item) - (65 - 27)
+		return int(item) - ('A' - 27)
 	}
 }
 
+// Parses the input text file into a list of rucksacks
 func parseInput(fileName string) []Rucksack {
 	file, err := os.Open(fileName)
 	if err != nil {
@@ -70,17 +81,64 @@ func parseInput(fileName string) []Rucksack {
 	return rucksacks
 }
 
-func getSummedDuplicatePriorities(rucksacks []Rucksack) int {
-	sum := 0
+// Gets a list of the two compartment's common item for each input rucksack
+// Exits the program if any rucksack didn't have a common item in the two compartments
+func getCommonItems(rucksacks []Rucksack) []byte {
+	var items []byte
 	for _, rucksack := range rucksacks {
-		sum += getItemPriority(rucksack.GetFirstCompartment().GetDuplicateItem(rucksack.GetSecondCompartment()))
+		item, err := FindCommonItem([]Rucksack{rucksack.GetFirstCompartment(), rucksack.GetSecondCompartment()})
+		if err != nil {
+			log.Fatalf("No common item found among the two compartments in the rucksack: %s\n", rucksack)
+		}
+		items = append(items, item)
+	}
+	return items
+}
+
+// Sums the priorities of a list of items
+func getItemsSummedPriority(items []byte) int {
+	sum := 0
+	for _, item := range items {
+		sum += getItemPriority(item)
 	}
 	return sum
+}
+
+// Finds the badges among the full list of rucksacks
+// Returns the list of badges
+// Exits the program if the input list of rucksacks isn't a multiple of 3
+// Exits the program if any triplet of elves didn't have a badge
+func getBadges(rucksacks []Rucksack) []byte {
+	if len(rucksacks)%3 != 0 {
+		log.Fatalln("The input rucksack slice isn't a multiple of 3 long.")
+		return nil
+	}
+	badges := make([]byte, len(rucksacks)/3)
+	for i := 0; i < len(badges); i++ {
+		rucksackIndex := i * 3
+		rucksackTriplet := rucksacks[rucksackIndex : rucksackIndex+3]
+		badge, err := FindCommonItem(rucksackTriplet)
+		if err != nil {
+			for _, rucksack := range rucksackTriplet {
+				log.Println(rucksack)
+			}
+			log.Fatalln("No common item found among the rucksacks printed above.")
+			break
+		}
+		badges[i] = badge
+	}
+	return badges
 }
 
 func main() {
 	rucksacks := parseInput("input.txt")
 
-	sum := getSummedDuplicatePriorities(rucksacks)
-	fmt.Printf("Priority sum: %d\n", sum)
+	commonItems := getCommonItems(rucksacks)
+	commonItemsSum := getItemsSummedPriority(commonItems)
+	fmt.Printf("Part 1 - common items sum: %d\n", commonItemsSum)
+
+	badges := getBadges(rucksacks)
+	badgesSum := getItemsSummedPriority(badges)
+	fmt.Printf("Part 2 - badges sum: %d\n", badgesSum)
+
 }
