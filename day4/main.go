@@ -59,6 +59,30 @@ func rangeFromString(str string) (*Range, error) {
 	return r, nil
 }
 
+// Parses a line from the input file format.
+// Example input: "2-4,6-8"
+// Returns a RangePair object containing the parsed data.
+// Returns an error if the string didn't fulfill the specified format.
+func parseInputLine(line string) (*RangePair, error) {
+	pairstr := strings.Split(line, ",")
+	if len(pairstr) != 2 {
+		return nil, fmt.Errorf("Unknown pair string: %s\n", line)
+	}
+	r1, err := rangeFromString(pairstr[0])
+	if err != nil {
+		return nil, err
+	}
+	r2, err := rangeFromString(pairstr[1])
+	if err != nil {
+		return nil, err
+	}
+
+	pair := new(RangePair)
+	pair.r1 = *r1
+	pair.r2 = *r2
+	return pair, nil
+}
+
 // Parses the input file
 // Returns a list of all pairs of ranges in the input
 // Exits the program if the format of one of the lines is invalid
@@ -73,27 +97,11 @@ func parseInput(fileName string) []RangePair {
 
 	var pairs []RangePair
 	for scanner.Scan() {
-		line := scanner.Text()
-		pairstr := strings.Split(line, ",")
-		if len(pairstr) != 2 {
-			log.Fatalf("Unknown pair string: %s\n", line)
-			break
-		}
-		r1, err := rangeFromString(pairstr[0])
+		pair, err := parseInputLine(scanner.Text())
 		if err != nil {
 			log.Fatal(err)
-			break
 		}
-		r2, err := rangeFromString(pairstr[1])
-		if err != nil {
-			log.Fatal(err)
-			break
-		}
-
-		var pair RangePair
-		pair.r1 = *r1
-		pair.r2 = *r2
-		pairs = append(pairs, pair)
+		pairs = append(pairs, *pair)
 	}
 
 	if err := scanner.Err(); err != nil {
