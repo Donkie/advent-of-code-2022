@@ -9,12 +9,14 @@ import (
 
 type Gesture int
 
+// Represents a RPS gesture
 const (
 	Rock Gesture = iota
 	Paper
 	Scissors
 )
 
+// Returns the gesture as a string
 func (gesture Gesture) String() string {
 	switch gesture {
 	case Rock:
@@ -28,6 +30,10 @@ func (gesture Gesture) String() string {
 	}
 }
 
+// Returns an integer indicating the win/draw/loss between this gesture and the opponents one
+// 1: This gesture beats the supplied gesture
+// 0: It's a draw
+// -1: This gesture loses against the other gesture
 func (gesture Gesture) Beats(otherGesture Gesture) int {
 	if gesture == otherGesture {
 		return 0
@@ -40,6 +46,37 @@ func (gesture Gesture) Beats(otherGesture Gesture) int {
 	return -1
 }
 
+// Returns what Gesture to use in order to win against this gesture
+func (gesture Gesture) HowToBeat() Gesture {
+	switch gesture {
+	case Rock:
+		return Paper
+	case Paper:
+		return Scissors
+	case Scissors:
+		return Rock
+	default:
+		log.Panicf("Unknown beater for gesture: %s", gesture.String())
+		return 0
+	}
+}
+
+// Returns what Gesture to use in order to lose against this gesture
+func (gesture Gesture) HowToLose() Gesture {
+	switch gesture {
+	case Rock:
+		return Scissors
+	case Paper:
+		return Rock
+	case Scissors:
+		return Paper
+	default:
+		log.Panicf("Unknown loser for gesture: %s", gesture.String())
+		return 0
+	}
+}
+
+// Parses the input file gesture codes to the Gesture enum
 func parseGesture(gesture byte) Gesture {
 	switch gesture {
 	case 'A', 'X':
@@ -54,11 +91,13 @@ func parseGesture(gesture byte) Gesture {
 	}
 }
 
+// Represents a round of RPS
 type Round struct {
 	opponentMove Gesture
 	myMove       Gesture
 }
 
+// Gets the score I get based on what gesture I picked
 func (round Round) GetMyGestureScore() int {
 	switch round.myMove {
 	case Rock:
@@ -73,6 +112,7 @@ func (round Round) GetMyGestureScore() int {
 	}
 }
 
+// Gets the score I get based on the outcome of this round
 func (round Round) GetMyOutcomeScore() int {
 	switch round.myMove.Beats(round.opponentMove) {
 	case -1:
@@ -84,11 +124,15 @@ func (round Round) GetMyOutcomeScore() int {
 	}
 }
 
+// Gets my total score of this round
 func (round Round) GetMyScore() int {
 	return round.GetMyGestureScore() + round.GetMyOutcomeScore()
 }
 
-func parseInput(fileName string) []Round {
+// Parses the input file
+// secondColumnMode = false: The 2nd column indicates the move I should take in that round
+// secondColmunMode = true: The 2nd column indicates what outcome I should make the round have
+func parseInput(fileName string, secondColumnMode bool) []Round {
 	file, err := os.Open(fileName)
 	if err != nil {
 		log.Fatal(err)
@@ -106,7 +150,21 @@ func parseInput(fileName string) []Round {
 
 		var round Round
 		round.opponentMove = parseGesture(line[0])
-		round.myMove = parseGesture(line[2])
+		if !secondColumnMode {
+			round.myMove = parseGesture(line[2])
+		} else {
+			outcome := line[2]
+			switch outcome {
+			case 'X':
+				round.myMove = round.opponentMove.HowToLose()
+			case 'Y':
+				round.myMove = round.opponentMove
+			case 'Z':
+				round.myMove = round.opponentMove.HowToBeat()
+			default:
+				log.Panicf("Unknown identifier: %b", outcome)
+			}
+		}
 		rounds = append(rounds, round)
 	}
 
@@ -117,6 +175,7 @@ func parseInput(fileName string) []Round {
 	return rounds
 }
 
+// Gets the total score for a slice of rounds
 func getTotalScore(rounds []Round) int {
 	sum := 0
 	for _, round := range rounds {
@@ -126,8 +185,11 @@ func getTotalScore(rounds []Round) int {
 }
 
 func main() {
-	rounds := parseInput("input.txt")
-
+	rounds := parseInput("input.txt", false)
 	totalScore := getTotalScore(rounds)
-	fmt.Printf("Total score: %d\n", totalScore)
+	fmt.Printf("Part 1: Total score: %d\n", totalScore)
+
+	rounds = parseInput("input.txt", true)
+	totalScore = getTotalScore(rounds)
+	fmt.Printf("Part 2: Total score: %d\n", totalScore)
 }
