@@ -1,9 +1,10 @@
 go 1.19
 
 use (
+	./lib
 	./day1
 	./day2
 	./day3
 	./day4
-	./lib
+	./day5
 )
