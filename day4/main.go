@@ -1,10 +1,8 @@
 package main
 
 import (
-	"bufio"
+	"advent-of-code-2022/lib"
 	"fmt"
-	"log"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -87,27 +85,15 @@ func parseInputLine(line string) (*RangePair, error) {
 // Returns a list of all pairs of ranges in the input
 // Exits the program if the format of one of the lines is invalid
 func parseInput(fileName string) []RangePair {
-	file, err := os.Open(fileName)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-
 	var pairs []RangePair
-	for scanner.Scan() {
-		pair, err := parseInputLine(scanner.Text())
+	lib.ParseInputByLine(fileName, func(line string) error {
+		pair, err := parseInputLine(line)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		pairs = append(pairs, *pair)
-	}
-
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
-	}
-
+		return nil
+	})
 	return pairs
 }
 
