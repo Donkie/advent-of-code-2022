@@ -22,6 +22,7 @@ func charToDir(char byte) (Dir, error) {
 	return 0, fmt.Errorf("Unknown direction char %b", char)
 }
 
+// ParseActions parses the input file into a list of actions.
 func ParseActions(fileName string) (actions []Action) {
 	lib.ParseInputByLine(fileName, func(line string) error {
 		args := strings.Split(line, " ")
@@ -46,9 +47,15 @@ func ParseActions(fileName string) (actions []Action) {
 
 func main() {
 	actions := ParseActions("input.txt")
-	rope := makeRope(lib.Vector2{}, lib.Vector2{})
+	rope := makeRope(2)
 	rope.PerformActions(actions)
 	visits := rope.GetNumTailUniquePositions()
 
 	log.Printf("Part 1 - Number of visited positions: %d", visits)
+
+	longRope := makeRope(10)
+	longRope.PerformActions(actions)
+	visits = longRope.GetNumTailUniquePositions()
+
+	log.Printf("Part 2 - Number of visited positions: %d", visits)
 }

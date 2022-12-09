@@ -23,11 +23,11 @@ func TestRopeMove(t *testing.T) {
 		{Left, lib.Vector2{X: 2, Y: 2}},
 	}
 
-	rope := makeRope(lib.Vector2{}, lib.Vector2{})
+	rope := makeRope(2)
 
 	for idx, move := range moves {
 		rope.PerformAction(Action{dir: move.dir})
-		actual := rope.tail
+		actual := rope.Tail()
 		if !actual.Equal(move.newTailPos) {
 			t.Errorf("Step %d. Expected: %s, Actual: %s", idx, move.newTailPos.String(), actual.String())
 			return
