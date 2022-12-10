@@ -30,6 +30,7 @@ type Program []Op
 
 type Machine struct {
 	program              Program
+	crt                  CRT
 	Op                   int
 	OpStep               int
 	Cycle                int
@@ -39,13 +40,14 @@ type Machine struct {
 
 func makeMachine(program Program) (machine Machine) {
 	machine.program = program
+	machine.crt = makeCRT()
 	machine.RegX = 1
-	machine.Cycle = 1
+	machine.Cycle = 0
 	return
 }
 
 func (machine *Machine) RecordSignalMetric() {
-	if (machine.Cycle-20)%40 == 0 {
+	if ((machine.Cycle - 20) % 40) == 0 {
 		machine.SignalStrengthMetric += machine.Cycle * machine.RegX
 	}
 }
@@ -53,6 +55,10 @@ func (machine *Machine) RecordSignalMetric() {
 func (machine *Machine) RunUntilExit() {
 	for machine.Op < len(machine.program) {
 		machine.Cycle++
+		machine.RecordSignalMetric()
+
+		machine.crt.Draw(machine)
+
 		op := machine.program[machine.Op]
 		opFinished := opFuncs[op.instruction](machine, machine.OpStep, op.args)
 		if opFinished {
@@ -61,7 +67,5 @@ func (machine *Machine) RunUntilExit() {
 		} else {
 			machine.OpStep++
 		}
-
-		machine.RecordSignalMetric()
 	}
 }
