@@ -1,7 +1,11 @@
 package lib
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
+// Abs return the absolute value of the input value
 func Abs(a int) int {
 	if a > 0 {
 		return a
@@ -10,35 +14,45 @@ func Abs(a int) int {
 	}
 }
 
-func Max(a int, b int) int {
-	if a > b {
-		return a
-	} else {
-		return b
+// Max returns the maximum value of the inputs
+func Max(nums ...int) int {
+	curMax := math.MinInt
+	for _, num := range nums {
+		if num > curMax {
+			curMax = num
+		}
 	}
+	return curMax
 }
 
-func Min(a int, b int) int {
-	if a < b {
-		return a
-	} else {
-		return b
+// Min returns the minimum value of the inputs
+func Min(nums ...int) int {
+	curMin := math.MaxInt
+	for _, num := range nums {
+		if num < curMin {
+			curMin = num
+		}
 	}
+	return curMin
 }
 
+// Vector2 represents a 2D vector with integer values
 type Vector2 struct {
 	X int
 	Y int
 }
 
+// String returns a string representation of the vector
 func (v Vector2) String() string {
 	return fmt.Sprintf("%d,%d", v.X, v.Y)
 }
 
+// Equal returns whether this vector is equal to another one
 func (v Vector2) Equal(v2 Vector2) bool {
 	return v.X == v2.X && v.Y == v2.Y
 }
 
+// Add returns a new vector where this vector is added to another one
 func (v Vector2) Add(v2 Vector2) Vector2 {
 	return Vector2{
 		X: v.X + v2.X,
@@ -46,6 +60,7 @@ func (v Vector2) Add(v2 Vector2) Vector2 {
 	}
 }
 
+// Sub returns a new vector where this vector is subtracted by another one
 func (v Vector2) Sub(v2 Vector2) Vector2 {
 	return Vector2{
 		X: v.X - v2.X,
@@ -53,6 +68,8 @@ func (v Vector2) Sub(v2 Vector2) Vector2 {
 	}
 }
 
+// GetNormalized returns a "normalized" version of the vector
+// Basically like a mathematical regular vector with length of 1, but it's locked in to the cardinal and diagonal directions.
 func (v Vector2) GetNormalized() (out Vector2) {
 	if Abs(v.X) > 0 {
 		out.X = v.X / Abs(v.X)
