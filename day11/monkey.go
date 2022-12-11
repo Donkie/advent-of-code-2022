@@ -20,13 +20,13 @@ func makeMonkeyTroop() (troop MonkeyTroop) {
 	return
 }
 
-func (troop MonkeyTroop) performMonkeyRound(monkey *Monkey, worryLevelsDividedByThree bool) {
+func (troop MonkeyTroop) performMonkeyRound(monkey *Monkey, worryLevelsDividedByThree bool, combinedDivisor int) {
 	for _, worry := range monkey.items {
 		monkey.inspections++
 
 		worry = monkey.op(worry)
 		if worryLevelsDividedByThree {
-			worry = worry / 3
+			worry /= 3
 		}
 
 		var targetMonkey *Monkey
@@ -35,15 +35,23 @@ func (troop MonkeyTroop) performMonkeyRound(monkey *Monkey, worryLevelsDividedBy
 		} else {
 			targetMonkey = &troop.monkies[monkey.testFalse]
 		}
+
+		worry = worry % combinedDivisor
+
 		targetMonkey.items = append(targetMonkey.items, worry)
 	}
-	monkey.items = []int{}
+	monkey.items = monkey.items[:0]
 }
 
 func (troop *MonkeyTroop) PerformRounds(times int, worryLevelsDividedByThree bool) {
+	combinedDivisor := 1
+	for _, monkey := range troop.monkies {
+		combinedDivisor *= monkey.divisibleTest
+	}
+
 	for round := 0; round < times; round++ {
 		for i := 0; i < len(troop.monkies); i++ {
-			troop.performMonkeyRound(&troop.monkies[i], worryLevelsDividedByThree)
+			troop.performMonkeyRound(&troop.monkies[i], worryLevelsDividedByThree, combinedDivisor)
 		}
 	}
 }

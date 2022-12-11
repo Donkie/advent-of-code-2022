@@ -112,4 +112,10 @@ func main() {
 	metric := troop.GetMonkeyBusinessLevel()
 
 	log.Printf("Part 1 - Monkey business level: %d", metric)
+
+	troop = ParseMonkeyTroop("input.txt")
+	troop.PerformRounds(10000, false)
+	metric = troop.GetMonkeyBusinessLevel()
+
+	log.Printf("Part 2 - Monkey business level: %d", metric)
 }

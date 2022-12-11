@@ -25,3 +25,8 @@ func TestExamplePart2(t *testing.T) {
 		t.Errorf("expected: %d, actual %d", expected, actual)
 	}
 }
+
+func TestExamplePart2Short(t *testing.T) {
+	troop := ParseMonkeyTroop("input_test.txt")
+	troop.PerformRounds(20, false)
+}
