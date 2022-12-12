@@ -24,6 +24,7 @@ type Node struct {
 	neighbours []*Node
 	dist       int
 	prev       *Node
+	isEnd      bool
 }
 
 func makeNode() (node Node) {
@@ -33,7 +34,6 @@ func makeNode() (node Node) {
 type Graph struct {
 	nodes     map[string]*Node
 	startNode *Node
-	endNode   *Node
 }
 
 func makeGraph() (graph Graph) {
@@ -61,9 +61,16 @@ func (g Graph) FindShortestPath() int {
 		}
 	}
 
+	var endNodeDist int
+
 	for unvisited.Len() > 0 {
 		curNode := smallestNodeInSet(unvisited)
 		unvisited.Remove(curNode)
+
+		if curNode.isEnd {
+			endNodeDist = curNode.dist
+			break
+		}
 
 		if curNode.dist == math.MaxInt {
 			// Node is unreachable
@@ -81,5 +88,5 @@ func (g Graph) FindShortestPath() int {
 		}
 	}
 
-	return g.endNode.dist
+	return endNodeDist
 }

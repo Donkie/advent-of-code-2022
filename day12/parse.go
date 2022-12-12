@@ -7,6 +7,13 @@ import (
 	"strings"
 )
 
+type Objective int
+
+const (
+	StartToEnd Objective = iota
+	AnyToEnd
+)
+
 func ParseHeightMap(fileName string) *Graph {
 	bytes, err := os.ReadFile(fileName)
 	if err != nil {
@@ -46,28 +53,30 @@ func ParseHeightMap(fileName string) *Graph {
 			var neighbours []*Node
 
 			// Check node to the left
-			if x > 0 && (heightsRow[x-1]-thisHeight) <= 1 {
+			if x > 0 && (thisHeight-heightsRow[x-1]) <= 1 {
 				neighbours = append(neighbours, graph.GetNode(x-1, y))
 			}
 			// Check node to the right
-			if x < (width-1) && (heightsRow[x+1]-thisHeight) <= 1 {
+			if x < (width-1) && (thisHeight-heightsRow[x+1]) <= 1 {
 				neighbours = append(neighbours, graph.GetNode(x+1, y))
 			}
 			// Check node up
-			if y > 0 && (heights[y-1][x]-thisHeight) <= 1 {
+			if y > 0 && (thisHeight-heights[y-1][x]) <= 1 {
 				neighbours = append(neighbours, graph.GetNode(x, y-1))
 			}
 			// Check node down
-			if y < (height-1) && (heights[y+1][x]-thisHeight) <= 1 {
+			if y < (height-1) && (thisHeight-heights[y+1][x]) <= 1 {
 				neighbours = append(neighbours, graph.GetNode(x, y+1))
 			}
 
 			graph.GetNode(x, y).neighbours = neighbours
+			if x == start.X && y == start.Y {
+				graph.GetNode(x, y).isEnd = true
+			}
 		}
 	}
 
-	graph.startNode = graph.GetNode(start.X, start.Y)
-	graph.endNode = graph.GetNode(end.X, end.Y)
+	graph.startNode = graph.GetNode(end.X, end.Y)
 
 	return &graph
 }
