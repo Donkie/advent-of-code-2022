@@ -14,7 +14,7 @@ const (
 	AnyToEnd
 )
 
-func ParseHeightMap(fileName string) *Graph {
+func ParseHeightMap(fileName string, objective Objective) *Graph {
 	bytes, err := os.ReadFile(fileName)
 	if err != nil {
 		log.Fatal(err)
@@ -70,8 +70,14 @@ func ParseHeightMap(fileName string) *Graph {
 			}
 
 			graph.GetNode(x, y).neighbours = neighbours
-			if x == start.X && y == start.Y {
-				graph.GetNode(x, y).isEnd = true
+			if objective == StartToEnd {
+				if x == start.X && y == start.Y {
+					graph.GetNode(x, y).isEnd = true
+				}
+			} else if objective == AnyToEnd {
+				if thisHeight == 0 {
+					graph.GetNode(x, y).isEnd = true
+				}
 			}
 		}
 	}
