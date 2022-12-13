@@ -7,24 +7,6 @@ import (
 	"strings"
 )
 
-func findIndexOfMatchingBracket(line string, startBracketIdx int) int {
-	level := 0
-	for i := startBracketIdx; i < len(line); i++ {
-		c := line[i]
-
-		if c == '[' {
-			level++
-		} else if c == ']' {
-			level--
-
-			if level == 0 {
-				return i
-			}
-		}
-	}
-	return -1
-}
-
 func findItemEnd(line string, itemStart int) int {
 	level := 0
 	for i := itemStart; i < len(line); i++ {
@@ -54,10 +36,11 @@ func isNumStr(line string) bool {
 }
 
 func parseItemLine(line string) *Item {
-	// Remove start and end brackets
 	if line[0] == '[' {
+		// Remove start and end brackets
 		line = line[1 : len(line)-1]
 	} else if isNumStr(line) {
+		// Line is a pure number, parse it as a number item
 		val, err := strconv.Atoi(line)
 		if err != nil {
 			log.Print(err)
@@ -66,9 +49,13 @@ func parseItemLine(line string) *Item {
 		return newItem(val)
 	}
 
+	// Line is not a pure number, it is a list of something
+
 	var children []*Item
 
 	if len(line) > 0 {
+		// The list is not empty, so we should find children
+
 		startIdx := 0
 		for true {
 			itemEnd := findItemEnd(line, startIdx)
