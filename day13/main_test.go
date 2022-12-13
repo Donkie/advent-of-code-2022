@@ -1,6 +1,8 @@
 package main
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestExamplePart1(t *testing.T) {
 	pairs := ParseInputPairsFile("input_test.txt")
@@ -90,5 +92,16 @@ func TestExamplePair8(t *testing.T) {
 	expected := false
 	if actual != expected {
 		t.Errorf("expected %t, actual %t", expected, actual)
+	}
+}
+
+func TestExamplePart2(t *testing.T) {
+	pairs := ParseInputPairsFile("input_test.txt")
+	list := newPacketListFromPairs(*pairs)
+
+	actual := list.GetDecoderKey()
+	expected := 140
+	if actual != expected {
+		t.Errorf("expected %d, actual %d", expected, actual)
 	}
 }

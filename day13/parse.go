@@ -98,8 +98,8 @@ func ParseInputPairs(pairText string) *[]Pair {
 		p2 := parseItemLine(p2str)
 
 		pairs = append(pairs, Pair{
-			p1: *p1,
-			p2: *p2,
+			p1: p1,
+			p2: p2,
 		})
 	}
 
