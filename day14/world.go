@@ -39,8 +39,10 @@ type Bounds struct {
 }
 
 type World struct {
-	squares map[int]Block
-	bounds  *Bounds
+	squares         map[int]Block
+	bounds          *Bounds
+	HasFloor        bool
+	lowestRockLevel int
 }
 
 func makeWorld() (world World) {
@@ -51,6 +53,9 @@ func makeWorld() (world World) {
 func (w *World) GetBlock(x int, y int) Block {
 	blk, ok := w.squares[xyToIdx(x, y)]
 	if !ok {
+		if w.HasFloor && y >= (w.lowestRockLevel+2) {
+			return Rock
+		}
 		return Air
 	} else {
 		return blk
@@ -69,7 +74,7 @@ func (w *World) UpdateBounds(x int, y int) {
 		w.bounds.minx = lib.Min(w.bounds.minx, x)
 		w.bounds.miny = lib.Min(w.bounds.miny, y)
 		w.bounds.maxx = lib.Max(w.bounds.maxx, x)
-		w.bounds.maxy = lib.Max(w.bounds.maxy, y)
+		w.bounds.maxy = lib.Max(w.bounds.maxy, y, w.lowestRockLevel+2)
 	}
 }
 
@@ -89,6 +94,9 @@ func (w *World) Print() {
 func (w *World) SetBlock(x int, y int, blk Block) {
 	w.squares[xyToIdx(x, y)] = blk
 	w.UpdateBounds(x, y)
+	if blk == Rock {
+		w.lowestRockLevel = lib.Max(w.lowestRockLevel, y)
+	}
 }
 
 func (w *World) SetBlockLine(x1 int, y1 int, x2 int, y2 int, blk Block) {
@@ -116,8 +124,8 @@ func (w *World) SetBlockLine(x1 int, y1 int, x2 int, y2 int, blk Block) {
 }
 
 func (w *World) SimulateSand(debugPrint bool) (restingSand int) {
-	wentIntoAbyss := false
-	for !wentIntoAbyss {
+	stopSimulation := false
+	for !stopSimulation {
 		restingSand++
 		curX, curY := 500, 0
 		for true {
@@ -125,7 +133,7 @@ func (w *World) SimulateSand(debugPrint bool) (restingSand int) {
 				// Empty spot down
 				curY++
 				if curY >= w.bounds.maxy {
-					wentIntoAbyss = true
+					stopSimulation = true
 					restingSand--
 					break
 				}
@@ -140,6 +148,12 @@ func (w *World) SimulateSand(debugPrint bool) (restingSand int) {
 			} else {
 				// No empty spot, rest sand
 				w.SetBlock(curX, curY, Sand)
+
+				if curX == 500 && curY == 0 {
+					// Sand came to rest at the spawn point, stop simulating
+					stopSimulation = true
+					break
+				}
 
 				if debugPrint &&
 					(restingSand == 1 || restingSand == 2 || restingSand == 5 || restingSand == 22 || restingSand == 24) {
