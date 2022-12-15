@@ -91,6 +91,12 @@ func (v Vector2) Distance(v2 Vector2) int {
 	return Max(Abs(sub.X), Abs(sub.Y))
 }
 
+// Distance returns the Manhattan distance between the two vectors
+func (v Vector2) ManhattanDistance(v2 Vector2) int {
+	sub := v.Sub(v2)
+	return Abs(sub.X) + Abs(sub.Y)
+}
+
 func (v Vector2) IsTouching(v2 Vector2) bool {
 	return v.Distance(v2) <= 1
 }
