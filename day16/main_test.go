@@ -23,3 +23,14 @@ func TestExamplePart2(t *testing.T) {
 		t.Errorf("expected %d, actual %d", expected, actual)
 	}
 }
+
+func TestExampleProfile(t *testing.T) {
+	valveGraph := ParseValveGraph("input.txt")
+	releasedPressure := valveGraph.GetOptimalPressureReleaseAmountTwoOperators(26)
+
+	actual := releasedPressure
+	expected := 1707
+	if actual != expected {
+		t.Errorf("expected %d, actual %d", expected, actual)
+	}
+}
