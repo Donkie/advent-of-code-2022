@@ -54,3 +54,11 @@ func (s *PtrSet[V]) Remove(item *V) {
 func (s *PtrSet[V]) Len() int {
 	return len(s.Data)
 }
+
+func (s *PtrSet[V]) Copy() PtrSet[V] {
+	newSet := MakePtrSet[V]()
+	for vertex := range s.Data {
+		newSet.Add(vertex)
+	}
+	return newSet
+}
