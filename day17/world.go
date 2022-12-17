@@ -11,6 +11,8 @@ import (
 // y
 // x ---->
 
+var MAXHEIGHT int = 100
+
 type Space bool
 
 const (
@@ -31,10 +33,6 @@ var shapes = map[ShapeType]Shape{
 	4: {{X: 1, Y: 0}, {X: 0, Y: 0}, {X: 0, Y: 1}, {X: 1, Y: 1}},               // o
 }
 
-func vecToIdx(v lib.Vector2) int {
-	return v.X + v.Y<<5 // Don't need to shift more than 5 since the world width is quite narrow
-}
-
 var dirVec = map[Direction]lib.Vector2{
 	Left:  {X: -1, Y: 0},
 	Right: {X: 1, Y: 0},
@@ -42,24 +40,30 @@ var dirVec = map[Direction]lib.Vector2{
 
 type RockFallingWorld struct {
 	jetStream    JetStream
-	field        map[int]Space
+	field        [][]Space
+	spawnOffset  int
 	curShape     ShapeType
 	highestPoint int
 }
 
 func makeRockFallingWorld(jetStream JetStream) (world RockFallingWorld) {
 	world.jetStream = jetStream
-	world.field = make(map[int]Space)
+
+	world.field = make([][]Space, MAXHEIGHT)
+	for i := 0; i < MAXHEIGHT; i++ {
+		world.field[i] = make([]Space, 7)
+	}
+	world.spawnOffset = 0
+
 	return
 }
 
 func (w *RockFallingWorld) get(v lib.Vector2) Space {
-	s, ok := w.field[vecToIdx(v)]
-	if !ok {
-		return Empty
-	} else {
-		return s
-	}
+	return w.field[v.Y][v.X]
+}
+
+func (w *RockFallingWorld) set(v lib.Vector2, space Space) {
+	w.field[v.Y][v.X] = space
 }
 
 func (w *RockFallingWorld) rockFits(pos lib.Vector2, shape Shape) bool {
@@ -79,13 +83,33 @@ func (w *RockFallingWorld) rockFits(pos lib.Vector2, shape Shape) bool {
 func (w *RockFallingWorld) solidifyRock(pos lib.Vector2, shape Shape) {
 	for _, piece := range shape {
 		piecePos := pos.Add(piece)
-		w.field[vecToIdx(piecePos)] = Rock
-		w.highestPoint = lib.Max(w.highestPoint, piecePos.Y+1)
+		w.set(piecePos, Rock)
+		w.highestPoint = lib.Max(w.highestPoint, piecePos.Y+1-w.spawnOffset)
 	}
 }
 
+func (w *RockFallingWorld) shiftField(steps int) {
+	// fmt.Printf("SHIFTING %d steps:\n", steps)
+	for step := 0; step < steps; step++ {
+		w0 := w.field[0]
+		for y := 0; y < MAXHEIGHT-1; y++ {
+			w.field[y] = w.field[y+1]
+		}
+		w.field[MAXHEIGHT-1] = w0
+	}
+	for y := (MAXHEIGHT - steps); y < MAXHEIGHT; y++ {
+		for x := 0; x <= 6; x++ {
+			w.field[y][x] = Empty
+		}
+	}
+	w.spawnOffset -= steps
+	// w.Print()
+}
+
 func (w *RockFallingWorld) simulateRock() {
-	pos := lib.Vector2{X: 2, Y: w.GetHighestPoint() + 3}
+	// fmt.Println("New block")
+	prevHeighest := w.GetHighestPoint()
+	pos := lib.Vector2{X: 2, Y: w.GetSpawnY()}
 	shape := shapes[w.curShape]
 	for true {
 		// Move sideways by jet
@@ -99,10 +123,19 @@ func (w *RockFallingWorld) simulateRock() {
 		newPos = pos.Add(lib.Vector2{X: 0, Y: -1})
 		if w.rockFits(newPos, shape) {
 			pos = newPos
+			// w.PrintWithRock(pos, w.curShape)
 		} else {
 			w.solidifyRock(pos, shape)
 			break
 		}
+	}
+
+	// fmt.Println("Block done")
+	// w.Print()
+
+	if (w.GetSpawnY() + 4) > MAXHEIGHT {
+		shiftAm := w.GetHighestPoint() - prevHeighest
+		w.shiftField(shiftAm)
 	}
 
 	w.curShape = (w.curShape + 1) % 5
@@ -110,7 +143,7 @@ func (w *RockFallingWorld) simulateRock() {
 
 func (w *RockFallingWorld) Simulate(numRocks int) {
 	for i := 0; i < numRocks; i++ {
-		if i%10000000000 == 0 {
+		if i > 0 && i%10000000000 == 0 {
 			fmt.Printf("%d%%", 100*i/1000000000000)
 		}
 		w.simulateRock()
@@ -125,6 +158,10 @@ func (w *RockFallingWorld) GetHighestPoint() int {
 	return w.highestPoint
 }
 
+func (w *RockFallingWorld) GetSpawnY() int {
+	return w.highestPoint + w.spawnOffset + 3
+}
+
 func rockOccupiesPos(testPos lib.Vector2, rockPos lib.Vector2, shape ShapeType) bool {
 	for _, piece := range shapes[shape] {
 		if testPos.Equal(rockPos.Add(piece)) {
@@ -135,7 +172,7 @@ func rockOccupiesPos(testPos lib.Vector2, rockPos lib.Vector2, shape ShapeType) 
 }
 
 func (w *RockFallingWorld) PrintWithRock(pos lib.Vector2, shape ShapeType) {
-	for y := w.GetHighestPoint() + 3; y >= 0; y-- {
+	for y := MAXHEIGHT - 1; y >= 0; y-- {
 		fmt.Print("|")
 		for x := 0; x <= 6; x++ {
 			testPos := lib.Vector2{X: x, Y: y}
@@ -156,7 +193,7 @@ func (w *RockFallingWorld) PrintWithRock(pos lib.Vector2, shape ShapeType) {
 }
 
 func (w *RockFallingWorld) Print() {
-	for y := w.GetHighestPoint() + 1; y >= 0; y-- {
+	for y := MAXHEIGHT - 1; y >= 0; y-- {
 		fmt.Print("|")
 		for x := 0; x <= 6; x++ {
 			switch w.get(lib.Vector2{X: x, Y: y}) {

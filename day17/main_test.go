@@ -18,7 +18,7 @@ func TestExamplePart1(t *testing.T) {
 func TestExamplePart2(t *testing.T) {
 	jetStream := ParseJetStream("input_test.txt")
 	world := makeRockFallingWorld(*jetStream)
-	world.Simulate(1000000000000)
+	world.Simulate(1_000_000_000_000)
 	height := world.GetHighestPoint()
 
 	actual := height
