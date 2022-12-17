@@ -59,11 +59,11 @@ func makeRockFallingWorld(jetStream JetStream) (world RockFallingWorld) {
 }
 
 func (w *RockFallingWorld) get(v lib.Vector2) Space {
-	return w.field[v.Y][v.X]
+	return w.field[(v.Y-w.spawnOffset)%MAXHEIGHT][v.X]
 }
 
 func (w *RockFallingWorld) set(v lib.Vector2, space Space) {
-	w.field[v.Y][v.X] = space
+	w.field[(v.Y-w.spawnOffset)%MAXHEIGHT][v.X] = space
 }
 
 func (w *RockFallingWorld) rockFits(pos lib.Vector2, shape Shape) bool {
@@ -89,21 +89,13 @@ func (w *RockFallingWorld) solidifyRock(pos lib.Vector2, shape Shape) {
 }
 
 func (w *RockFallingWorld) shiftField(steps int) {
-	// fmt.Printf("SHIFTING %d steps:\n", steps)
-	for step := 0; step < steps; step++ {
-		w0 := w.field[0]
-		for y := 0; y < MAXHEIGHT-1; y++ {
-			w.field[y] = w.field[y+1]
-		}
-		w.field[MAXHEIGHT-1] = w0
-	}
-	for y := (MAXHEIGHT - steps); y < MAXHEIGHT; y++ {
-		for x := 0; x <= 6; x++ {
+	for i := 0; i < steps; i++ {
+		y := (i - w.spawnOffset) % MAXHEIGHT
+		for x := 0; x < 7; x++ {
 			w.field[y][x] = Empty
 		}
 	}
 	w.spawnOffset -= steps
-	// w.Print()
 }
 
 func (w *RockFallingWorld) simulateRock() {
@@ -143,8 +135,8 @@ func (w *RockFallingWorld) simulateRock() {
 
 func (w *RockFallingWorld) Simulate(numRocks int) {
 	for i := 0; i < numRocks; i++ {
-		if i > 0 && i%10000000000 == 0 {
-			fmt.Printf("%d%%", 100*i/1000000000000)
+		if i > 0 && i%10_000_000_000 == 0 {
+			fmt.Printf("%d%%", 100*i/1_000_000_000_000)
 		}
 		w.simulateRock()
 		// if i < 10 {
