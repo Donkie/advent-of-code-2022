@@ -17,3 +17,7 @@ func (j *JetStream) PopDir() (d Direction) {
 	j.idx = (j.idx + 1) % len(j.dir)
 	return
 }
+
+func (j *JetStream) Len() int {
+	return len(j.dir)
+}

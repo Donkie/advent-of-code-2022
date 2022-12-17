@@ -11,7 +11,7 @@ import (
 // y
 // x ---->
 
-var MAXHEIGHT int = 100
+var MAXHEIGHT int = 1000
 
 type Space bool
 
@@ -40,7 +40,7 @@ var dirVec = []lib.Vector2{
 
 type RockFallingWorld struct {
 	jetStream    JetStream
-	field        [][]Space
+	field        []uint8
 	spawnOffset  int
 	curShape     ShapeType
 	highestPoint int
@@ -49,21 +49,22 @@ type RockFallingWorld struct {
 func makeRockFallingWorld(jetStream JetStream) (world RockFallingWorld) {
 	world.jetStream = jetStream
 
-	world.field = make([][]Space, MAXHEIGHT)
-	for i := 0; i < MAXHEIGHT; i++ {
-		world.field[i] = make([]Space, 7)
-	}
+	world.field = make([]uint8, MAXHEIGHT)
 	world.spawnOffset = 0
 
 	return
 }
 
-func (w *RockFallingWorld) get(v lib.Vector2) Space {
-	return w.field[(v.Y-w.spawnOffset)%MAXHEIGHT][v.X]
+func (w *RockFallingWorld) get(v lib.Vector2) bool {
+	return (w.field[(v.Y-w.spawnOffset)%MAXHEIGHT] & (1 << v.X)) != 0
 }
 
-func (w *RockFallingWorld) set(v lib.Vector2, space Space) {
-	w.field[(v.Y-w.spawnOffset)%MAXHEIGHT][v.X] = space
+func (w *RockFallingWorld) set(v lib.Vector2, isRock bool) {
+	if isRock {
+		w.field[(v.Y-w.spawnOffset)%MAXHEIGHT] |= (1 << v.X)
+	} else {
+		w.field[(v.Y-w.spawnOffset)%MAXHEIGHT] &^= (1 << v.X)
+	}
 }
 
 func (w *RockFallingWorld) rockFits(pos lib.Vector2, shape Shape) bool {
@@ -73,7 +74,7 @@ func (w *RockFallingWorld) rockFits(pos lib.Vector2, shape Shape) bool {
 
 	for _, piece := range shape {
 		piecePos := pos.Add(piece)
-		if w.get(piecePos) != Empty {
+		if w.get(piecePos) {
 			return false
 		}
 	}
@@ -83,7 +84,7 @@ func (w *RockFallingWorld) rockFits(pos lib.Vector2, shape Shape) bool {
 func (w *RockFallingWorld) solidifyRock(pos lib.Vector2, shape Shape) {
 	for _, piece := range shape {
 		piecePos := pos.Add(piece)
-		w.set(piecePos, Rock)
+		w.set(piecePos, true)
 		w.highestPoint = lib.Max(w.highestPoint, piecePos.Y+1-w.spawnOffset)
 	}
 }
@@ -92,7 +93,7 @@ func (w *RockFallingWorld) shiftField(steps int) {
 	for i := 0; i < steps; i++ {
 		y := (i - w.spawnOffset) % MAXHEIGHT
 		for x := 0; x < 7; x++ {
-			w.field[y][x] = Empty
+			w.field[y] = 0
 		}
 	}
 	w.spawnOffset -= steps
@@ -134,15 +135,47 @@ func (w *RockFallingWorld) simulateRock() {
 }
 
 func (w *RockFallingWorld) Simulate(numRocks int) {
+	cache := make(map[string]struct {
+		numRocks int
+		height   int
+	})
+	// bytes := make([]byte, MAXHEIGHT)
+
 	for i := 0; i < numRocks; i++ {
-		if i > 0 && i%10_000_000_000 == 0 {
-			fmt.Printf("%d%%", 100*i/1_000_000_000_000)
+		if i > 0 && i%1_000_000_000 == 0 {
+			fmt.Printf("%d%%.", 1000*i/1_000_000_000_000)
 		}
 		w.simulateRock()
-		// if i < 10 {
-		// 	fmt.Println()
-		// 	w.Print()
-		// }
+
+		// Store the current field in a cache
+		// If we stumble upon this field again, it must mean we're in a pattern
+		// Then we can just take the difference between where we are now and where we were then to get the pattern
+		// And fast-forward to the end by repeating this pattern
+		hash := string(w.field) // Since the field is a list of uint8 bitfields (characters), we can simply convert it to a string
+		pattern, ok := cache[hash]
+		if ok {
+			heightLastTime := pattern.height
+			rocksLastTime := pattern.numRocks
+			patternHeight := w.GetHighestPoint() - heightLastTime
+			patternLength := i - rocksLastTime
+
+			for true {
+				if i < (numRocks - patternLength) {
+					i += patternLength
+					w.highestPoint += patternHeight
+				} else {
+					break
+				}
+			}
+		} else {
+			cache[hash] = struct {
+				numRocks int
+				height   int
+			}{
+				numRocks: i,
+				height:   w.GetHighestPoint(),
+			}
+		}
 	}
 }
 
@@ -172,7 +205,7 @@ func (w *RockFallingWorld) PrintWithRock(pos lib.Vector2, shape ShapeType) {
 				fmt.Print("@")
 			} else {
 				switch w.get(testPos) {
-				case Rock:
+				case true:
 					fmt.Print("#")
 				default:
 					fmt.Print(".")
@@ -189,7 +222,7 @@ func (w *RockFallingWorld) Print() {
 		fmt.Print("|")
 		for x := 0; x <= 6; x++ {
 			switch w.get(lib.Vector2{X: x, Y: y}) {
-			case Rock:
+			case true:
 				fmt.Print("#")
 			default:
 				fmt.Print(".")

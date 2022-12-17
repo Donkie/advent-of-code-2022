@@ -12,7 +12,7 @@ func main() {
 
 	jetStream = ParseJetStream("input.txt")
 	world = makeRockFallingWorld(*jetStream)
-	world.Simulate(1_000_000_000_000)
+	world.Simulate(1000000000000)
 	height = world.GetHighestPoint()
 
 	log.Printf("Part 2 - Tower height: %d", height)

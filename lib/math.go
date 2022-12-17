@@ -100,3 +100,26 @@ func (v Vector2) ManhattanDistance(v2 Vector2) int {
 func (v Vector2) IsTouching(v2 Vector2) bool {
 	return v.Distance(v2) <= 1
 }
+
+// greatest common divisor (GCD) via Euclidean algorithm
+// From: https://siongui.github.io/2017/06/03/go-find-lcm-by-gcd/
+func GCD(a, b int) int {
+	for b != 0 {
+		t := b
+		b = a % b
+		a = t
+	}
+	return a
+}
+
+// find Least Common Multiple (LCM) via GCD
+// From: https://siongui.github.io/2017/06/03/go-find-lcm-by-gcd/
+func LCM(a, b int, integers ...int) int {
+	result := a * b / GCD(a, b)
+
+	for i := 0; i < len(integers); i++ {
+		result = LCM(result, integers[i])
+	}
+
+	return result
+}
