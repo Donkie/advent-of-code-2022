@@ -22,12 +22,13 @@ type Shape []lib.Vector2
 
 type ShapeType uint8
 
+// The right-most piece is the first item of the list so we can use that to easily check the width of the piece
 var shapes = map[ShapeType]Shape{
-	0: {{X: 0, Y: 0}, {X: 1, Y: 0}, {X: 2, Y: 0}, {X: 3, Y: 0}},               // -
-	1: {{X: 0, Y: 1}, {X: 1, Y: 1}, {X: 2, Y: 1}, {X: 1, Y: 0}, {X: 1, Y: 2}}, // +
-	2: {{X: 0, Y: 0}, {X: 1, Y: 0}, {X: 2, Y: 0}, {X: 2, Y: 1}, {X: 2, Y: 2}}, // _|
+	0: {{X: 3, Y: 0}, {X: 0, Y: 0}, {X: 1, Y: 0}, {X: 2, Y: 0}},               // -
+	1: {{X: 2, Y: 1}, {X: 0, Y: 1}, {X: 1, Y: 1}, {X: 1, Y: 0}, {X: 1, Y: 2}}, // +
+	2: {{X: 2, Y: 0}, {X: 0, Y: 0}, {X: 1, Y: 0}, {X: 2, Y: 1}, {X: 2, Y: 2}}, // _|
 	3: {{X: 0, Y: 0}, {X: 0, Y: 1}, {X: 0, Y: 2}, {X: 0, Y: 3}},               // |
-	4: {{X: 0, Y: 0}, {X: 1, Y: 0}, {X: 0, Y: 1}, {X: 1, Y: 1}},               // o
+	4: {{X: 1, Y: 0}, {X: 0, Y: 0}, {X: 0, Y: 1}, {X: 1, Y: 1}},               // o
 }
 
 func vecToIdx(v lib.Vector2) int {
@@ -62,10 +63,13 @@ func (w *RockFallingWorld) get(v lib.Vector2) Space {
 }
 
 func (w *RockFallingWorld) rockFits(pos lib.Vector2, shape Shape) bool {
-	// newPos := pos.Add(dirVec[dir])
+	if pos.X < 0 || (pos.X+shape[0].X) > 6 || pos.Y < 0 {
+		return false
+	}
+
 	for _, piece := range shape {
 		piecePos := pos.Add(piece)
-		if piecePos.X < 0 || piecePos.X > 6 || piecePos.Y < 0 || w.get(piecePos) != Empty {
+		if w.get(piecePos) != Empty {
 			return false
 		}
 	}
@@ -84,16 +88,12 @@ func (w *RockFallingWorld) simulateRock() {
 	pos := lib.Vector2{X: 2, Y: w.GetHighestPoint() + 3}
 	shape := shapes[w.curShape]
 	for true {
-		// w.PrintWithRock(pos, w.curShape)
-
 		// Move sideways by jet
 		dir := w.jetStream.PopDir()
 		newPos := pos.Add(dirVec[dir])
 		if w.rockFits(newPos, shape) {
 			pos = newPos
 		}
-
-		// w.PrintWithRock(pos, w.curShape)
 
 		// Move downwards
 		newPos = pos.Add(lib.Vector2{X: 0, Y: -1})
