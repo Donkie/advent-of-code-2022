@@ -25,7 +25,7 @@ type Shape []lib.Vector2
 type ShapeType uint8
 
 // The right-most piece is the first item of the list so we can use that to easily check the width of the piece
-var shapes = map[ShapeType]Shape{
+var shapes = []Shape{
 	0: {{X: 3, Y: 0}, {X: 0, Y: 0}, {X: 1, Y: 0}, {X: 2, Y: 0}},               // -
 	1: {{X: 2, Y: 1}, {X: 0, Y: 1}, {X: 1, Y: 1}, {X: 1, Y: 0}, {X: 1, Y: 2}}, // +
 	2: {{X: 2, Y: 0}, {X: 0, Y: 0}, {X: 1, Y: 0}, {X: 2, Y: 1}, {X: 2, Y: 2}}, // _|
@@ -33,7 +33,7 @@ var shapes = map[ShapeType]Shape{
 	4: {{X: 1, Y: 0}, {X: 0, Y: 0}, {X: 0, Y: 1}, {X: 1, Y: 1}},               // o
 }
 
-var dirVec = map[Direction]lib.Vector2{
+var dirVec = []lib.Vector2{
 	Left:  {X: -1, Y: 0},
 	Right: {X: 1, Y: 0},
 }

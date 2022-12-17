@@ -1,10 +1,10 @@
 package main
 
-type Direction bool
+type Direction uint8
 
 const (
-	Left  Direction = false
-	Right Direction = true
+	Left Direction = iota
+	Right
 )
 
 type JetStream struct {
