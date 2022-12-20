@@ -1,29 +1,11 @@
 package main
 
 import (
+	"advent-of-code-2022/lib"
 	"fmt"
 	"log"
 	"strings"
 )
-
-// Plain % in Go doesn't handle negative numbers like we expect
-func modulus(d, m int) int {
-	res := d % m
-	if res < 0 {
-		return res + m
-	}
-	return res
-}
-
-func insertAtIndex[V any](slice []V, idx int, value V) []V {
-	slice = append(slice[:idx+1], slice[idx:]...)
-	slice[idx] = value
-	return slice
-}
-
-func removeAtIndex[V any](slice []V, idx int) []V {
-	return append(slice[:idx], slice[idx+1:]...)
-}
 
 type Number struct {
 	value int
@@ -57,19 +39,13 @@ func (nmbrs *Numbers) Print() {
 	log.Println(strings.Join(strs, ", "))
 }
 
-// 1, -3, 2, 3, -2, 0, 4
-// curidx 1 newidx 5
-// 1, 2, 3, -2, 0, 4
-
 // Performs the mixing operation on the numbers
 func (nmbrs *Numbers) Mix() {
-	// nmbrs.Print()
 	for _, nmbr := range nmbrs.order {
 		curIdx := nmbrs.GetIndexByPointer(nmbr)
-		newIdx := modulus(curIdx+nmbr.value, nmbrs.size-1)
-		nmbrs.values = removeAtIndex(nmbrs.values, curIdx)
-		nmbrs.values = insertAtIndex(nmbrs.values, newIdx, nmbr)
-		// nmbrs.Print()
+		newIdx := lib.Mod(curIdx+nmbr.value, nmbrs.size-1) // Size-1 because the last and first position in the array counts as the same thing
+		nmbrs.values = lib.RemoveAtIndex(nmbrs.values, curIdx)
+		nmbrs.values = lib.InsertAtIndex(nmbrs.values, newIdx, nmbr)
 	}
 }
 
@@ -103,6 +79,6 @@ func (nmbrs *Numbers) GetIndexOfZero() int {
 
 // Returns the value of a number by index
 func (nmbrs *Numbers) Get(idx int) int {
-	idx = modulus(idx, nmbrs.size)
+	idx = lib.Mod(idx, nmbrs.size)
 	return nmbrs.values[idx].value
 }

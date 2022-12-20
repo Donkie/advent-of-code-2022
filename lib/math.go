@@ -57,3 +57,12 @@ func LCM(a, b int, integers ...int) int {
 
 	return result
 }
+
+// Plain % in Go doesn't handle negative numbers like we expect
+func Mod(d, m int) int {
+	res := d % m
+	if res < 0 {
+		return res + m
+	}
+	return res
+}
