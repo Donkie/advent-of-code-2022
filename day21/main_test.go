@@ -12,3 +12,14 @@ func TestExamplePart1(t *testing.T) {
 		t.Errorf("expected %d, actual %d", expected, actual)
 	}
 }
+
+func TestExamplePart2(t *testing.T) {
+	monkeyRiddle := ParseMonkeyRiddle("input_test.txt")
+	number := monkeyRiddle.GetNumberToYell()
+
+	expected := 301
+	actual := number
+	if actual != expected {
+		t.Errorf("expected %d, actual %d", expected, actual)
+	}
+}

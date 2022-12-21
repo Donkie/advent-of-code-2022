@@ -21,6 +21,7 @@ func ParseMonkeyLine(line string) (*Monkey, error) {
 		}
 		monk.value = val
 		monk.isSolved = true
+		monk.isValueMonkey = true
 		monk.op = None
 	} else {
 		monk.dependency1Name = cmd[0:4]
@@ -36,6 +37,7 @@ func ParseMonkeyLine(line string) (*Monkey, error) {
 			monk.op = Div
 		}
 		monk.isSolved = false
+		monk.isValueMonkey = false
 	}
 
 	return monk, nil
