@@ -74,7 +74,7 @@ func ParseWorld(fileName string) *World {
 	world := new(World)
 	world.sqrs = parseMap(sqrsstr)
 	world.path = parsePath(path)
-	world.stepCache = make(map[Step]lib.Vector2)
+	world.breadCrumbs = make(map[lib.Vector2]Direction)
 
 	return world
 }

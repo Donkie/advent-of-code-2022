@@ -9,8 +9,8 @@ func assert[V comparable](t *testing.T, expected V, actual V) {
 }
 
 func TestDirection(t *testing.T) {
-	assert(t, Down, Right.Turn(Right))
-	assert(t, Right, Up.Turn(Right))
-	assert(t, Up, Right.Turn(Left))
-	assert(t, Right, Down.Turn(Left))
+	assert(t, Down, Right.Turn(Right, 1))
+	assert(t, Right, Up.Turn(Right, 1))
+	assert(t, Up, Right.Turn(Left, 1))
+	assert(t, Right, Down.Turn(Left, 1))
 }
