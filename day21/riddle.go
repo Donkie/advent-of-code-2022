@@ -130,7 +130,7 @@ func (r *Riddle) GetNumberToYell() int {
 	root := r.monkieNames["root"]
 	root.op = Eq
 
-	r.solveForOther(root, 0)
+	r.solveForOther(root, 0) // The 0 here is not gonna be used for anything.
 
 	return r.monkieNames["humn"].value
 }
