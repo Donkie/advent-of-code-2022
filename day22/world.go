@@ -153,9 +153,9 @@ var faceMap = map[Face]map[Direction]Face{
 		Up:    FFront,
 	},
 	FBack: {
-		Right: FRight,
+		Right: FLeft,
 		Down:  FBottom,
-		Left:  FLeft,
+		Left:  FRight,
 		Up:    FTop,
 	},
 	FLeft: {
@@ -356,7 +356,7 @@ func (w *World) Traverse() {
 			w.char.dir = w.char.dir.Turn(op.turnDir, 1)
 		} else {
 			w.Walk(op.steps)
-			w.Print()
+			// w.Print()
 		}
 	}
 }
