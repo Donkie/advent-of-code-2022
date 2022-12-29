@@ -76,17 +76,19 @@ func (w *World) PrintDuration(maxTime int) {
 }
 
 type State struct {
-	px   int
-	py   int
-	time int
+	px    int
+	py    int
+	time  int
+	phase uint8
 }
 
-func (w *World) FindShortestPath() int {
+func (w *World) FindShortestPath(part bool) int {
 	queue := make([]State, 1)
 	queue[0] = State{
-		px:   w.entryX,
-		py:   w.entryY,
-		time: 0,
+		px:    w.entryX,
+		py:    w.entryY,
+		time:  0,
+		phase: 0,
 	}
 
 	cache := make(map[State]struct{})
@@ -112,10 +114,33 @@ func (w *World) FindShortestPath() int {
 		}
 		cache[Xperiodic] = struct{}{}
 
+		nextPhase := X.phase
+
 		// Check if we're done
-		if X.px == w.exitX && X.py == w.exitY {
-			bestTime = lib.Min(bestTime, X.time)
-			continue
+		if part == false {
+			if X.px == w.exitX && X.py == w.exitY {
+				bestTime = lib.Min(bestTime, X.time)
+				continue
+			}
+		} else {
+			switch X.phase {
+			case 0:
+				// First reach goal
+				if X.px == w.exitX && X.py == w.exitY {
+					nextPhase++
+				}
+			case 1:
+				// Go back to start
+				if X.px == w.entryX && X.py == w.entryY {
+					nextPhase++
+				}
+			case 2:
+				// Reach goal again
+				if X.px == w.exitX && X.py == w.exitY {
+					bestTime = lib.Min(bestTime, X.time)
+					continue
+				}
+			}
 		}
 
 		nextT := X.time + 1
@@ -127,41 +152,46 @@ func (w *World) FindShortestPath() int {
 		if !w.IsOOB(X.px, X.py-1) && !blizz.Get(X.px, X.py-1, nextT) {
 			// Move north
 			queue = append(queue, State{
-				px:   X.px,
-				py:   X.py - 1,
-				time: nextT,
+				px:    X.px,
+				py:    X.py - 1,
+				time:  nextT,
+				phase: nextPhase,
 			})
 		}
 		if !w.IsOOB(X.px-1, X.py) && !blizz.Get(X.px-1, X.py, nextT) {
 			// Move west
 			queue = append(queue, State{
-				px:   X.px - 1,
-				py:   X.py,
-				time: nextT,
+				px:    X.px - 1,
+				py:    X.py,
+				time:  nextT,
+				phase: nextPhase,
 			})
 		}
 		if !blizz.Get(X.px, X.py, nextT) {
 			// Stay
 			queue = append(queue, State{
-				px:   X.px,
-				py:   X.py,
-				time: nextT,
+				px:    X.px,
+				py:    X.py,
+				time:  nextT,
+				phase: nextPhase,
 			})
 		}
 		if !w.IsOOB(X.px, X.py+1) && !blizz.Get(X.px, X.py+1, nextT) {
 			// Move south
 			queue = append(queue, State{
-				px:   X.px,
-				py:   X.py + 1,
-				time: nextT,
+				px:    X.px,
+				py:    X.py + 1,
+				time:  nextT,
+				phase: nextPhase,
 			})
 		}
 		if !w.IsOOB(X.px+1, X.py) && !blizz.Get(X.px+1, X.py, nextT) {
 			// Move east
 			queue = append(queue, State{
-				px:   X.px + 1,
-				py:   X.py,
-				time: nextT,
+				px:    X.px + 1,
+				py:    X.py,
+				time:  nextT,
+				phase: nextPhase,
 			})
 		}
 	}
